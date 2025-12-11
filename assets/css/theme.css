@@ -1,0 +1,93 @@
+@import url('https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&family=Libre+Baskerville:wght@400;700&family=Inter:wght@400;500;600&display=swap');
+
+body {
+    font-family: 'Inter', sans-serif;
+    background: #f6f1e1;
+    color: #2a1a12;
+}
+
+.parchment {
+    background: #f6f1e1;
+}
+
+.brand-title {
+    font-family: 'UnifrakturMaguntia', cursive;
+    letter-spacing: 1px;
+}
+
+.bg-brown {
+    background: linear-gradient(135deg, #3d2622, #241510);
+}
+
+.card {
+    border: 1px solid #e3d6c2;
+    border-radius: 14px;
+    background: #fffaf1;
+}
+
+.card-header {
+    background: #3d2622;
+    color: #f6f1e1;
+    border-bottom: none;
+    font-family: 'Libre Baskerville', serif;
+}
+
+.pill {
+    border-radius: 999px;
+}
+
+.table thead {
+    background: #3d2622;
+    color: #f6f1e1;
+}
+
+.btn-brown {
+    background: #3d2622;
+    color: #f6f1e1;
+    border: none;
+}
+
+.btn-brown:hover {
+    background: #4d2f2a;
+    color: #fff;
+}
+
+.pie {
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    margin: 0 auto;
+    position: relative;
+    box-shadow: 0 6px 24px rgba(0,0,0,0.08);
+    border: 6px solid #fffaf1;
+}
+
+.pie-label {
+    position: absolute;
+    inset: 24%;
+    background: #fffaf1;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-weight: 600;
+    color: #2a1a12;
+    box-shadow: inset 0 0 0 1px #e3d6c2;
+}
+
+.legend-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 8px;
+}
+
+.muted-box {
+    background: #f0e6d4;
+    border-radius: 10px;
+    padding: 12px 14px;
+    border: 1px solid #e1d6c3;
+}
+
