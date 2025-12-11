@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Staff Activity</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/theme.css">
+    <script src="assets/js/app.js"></script>
+</head>
+<body class="bg parchment">
+<nav class="navbar navbar-expand-lg navbar-dark bg-brown shadow-sm">
+    <div class="container-fluid">
+        <a class="navbar-brand fw-bold" href="dashboard.html">Medieval Café POS</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav me-auto" id="nav-links"></ul>
+            <div class="d-flex align-items-center gap-3">
+                <span class="text-light small" id="nav-user"></span>
+                <button class="btn btn-sm btn-outline-light" id="logout-btn">Logout</button>
+            </div>
+        </div>
+    </div>
+</nav>
+<main class="container py-4">
+    <div class="brand-title fs-2 mb-3">Staff Activity</div>
+    <div class="card shadow mb-4">
+        <div class="card-header">Transactions by User</div>
+        <div class="card-body p-0">
+            <table class="table mb-0" id="cashier-table"></table>
+        </div>
+    </div>
+    <div class="row g-4">
+        <div class="col-lg-6">
+            <div class="card shadow h-100">
+                <div class="card-header">Void/Refund Actions (latest 30)</div>
+                <div class="card-body p-0">
+                    <table class="table mb-0" id="void-table"></table>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card shadow h-100">
+                <div class="card-header">Recent Logins (latest 30)</div>
+                <div class="card-body p-0">
+                    <table class="table mb-0" id="login-table"></table>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+<footer class="text-center text-muted py-4 small">Crafted for a medieval café — <span id="year"></span></footer>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+document.getElementById('year').textContent = new Date().getFullYear();
+function renderNav(user){
+    const nav=document.getElementById('nav-links');
+    nav.innerHTML=[
+        {href:'dashboard.html',label:'Dashboard'},
+        {href:'orders.html',label:'Orders'},
+        {href:'products.html',label:'Products'},
+        {href:'reports.html',label:'Reports'},
+        {href:'users.html',label:'Users'},
+        {href:'staff_activity.html',label:'Staff'},
+        {href:'settings.html',label:'Settings'},
+    ].map(l=>`<li class="nav-item"><a class="nav-link" href="${l.href}">${l.label}</a></li>`).join('');
+    document.getElementById('nav-user').textContent=`Logged in as ${user.name} (${user.role})`;
+}
+function fmt(n){return '₱'+Number(n).toFixed(2);}
+async function load(){
+    const data = await getJSON('api/staff-data.php');
+    if(!data) return;
+    renderNav(data.user);
+    const cs=data.cashierStats;
+    document.getElementById('cashier-table').innerHTML=`
+        <thead><tr><th>Name</th><th>Email</th><th class="text-end">Orders</th><th class="text-end">Total</th></tr></thead>
+        <tbody>
+            ${cs.length ? cs.map(c=>`<tr><td>${c.name}</td><td>${c.email}</td><td class="text-end">${c.tx_count}</td><td class="text-end">${fmt(c.tx_total)}</td></tr>`).join('') : `<tr><td colspan="4" class="text-center p-4 text-muted">No data.</td></tr>`}
+        </tbody>`;
+    const voids=data.voids;
+    document.getElementById('void-table').innerHTML=`
+        <thead><tr><th>ID</th><th>Txn</th><th>Action</th><th>By</th><th>When</th></tr></thead>
+        <tbody>
+            ${voids.length ? voids.map(v=>`<tr><td>${v.id}</td><td>${v.transaction_id}</td><td>${v.action}</td><td>${v.actor}</td><td>${v.created_at}</td></tr>`).join('') : `<tr><td colspan="5" class="text-center p-4 text-muted">No actions.</td></tr>`}
+        </tbody>`;
+    const logs=data.logins;
+    document.getElementById('login-table').innerHTML=`
+        <thead><tr><th>When</th><th>User</th><th>IP</th></tr></thead>
+        <tbody>
+            ${logs.length ? logs.map(l=>`<tr><td>${l.created_at}</td><td>${l.name} (${l.email})</td><td>${l.ip_address}</td></tr>`).join('') : `<tr><td colspan="3" class="text-center p-4 text-muted">No logins yet.</td></tr>`}
+        </tbody>`;
+}
+document.getElementById('logout-btn').addEventListener('click', async ()=>{ await getJSON('api/logout.php');});
+load();
+</script>
+</body>
+</html>
+

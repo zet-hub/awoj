@@ -51,6 +51,25 @@ function require_login(array $roles = []): void
     }
 }
 
+function require_login_json(array $roles = []): void
+{
+    $user = current_user();
+    if (!$user) {
+        respond_json(['redirect' => 'login.html'], 401);
+    }
+    if ($roles && !in_array($user['role'], $roles, true)) {
+        respond_json(['redirect' => 'login.html', 'error' => 'Access denied'], 403);
+    }
+}
+
+function respond_json(array $payload, int $status = 200): never
+{
+    http_response_code($status);
+    header('Content-Type: application/json');
+    echo json_encode($payload);
+    exit;
+}
+
 function log_access(int $userId, string $event): void
 {
     $stmt = db()->prepare('INSERT INTO access_logs (user_id, event, ip_address, user_agent) VALUES (:uid, :event, :ip, :ua)');

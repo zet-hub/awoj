@@ -147,3 +147,4 @@ $users = $db->query('SELECT id, name, email, role, created_at FROM users ORDER B
 <?php include __DIR__ . '/partials/footer.php'; ?>
 
 
+

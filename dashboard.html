@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/theme.css">
+    <script src="assets/js/app.js"></script>
+</head>
+<body class="bg parchment">
+<nav class="navbar navbar-expand-lg navbar-dark bg-brown shadow-sm">
+    <div class="container-fluid">
+        <a class="navbar-brand fw-bold" href="dashboard.html">Medieval Café POS</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav me-auto" id="nav-links"></ul>
+            <div class="d-flex align-items-center gap-3">
+                <span class="text-light small" id="nav-user"></span>
+                <button class="btn btn-sm btn-outline-light" id="logout-btn">Logout</button>
+            </div>
+        </div>
+    </div>
+</nav>
+<main class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <div class="brand-title fs-2">Hall of Ledgers</div>
+            <div class="text-muted">Minimal parchment, medieval accents, swift glance.</div>
+        </div>
+        <div>
+            <a class="btn btn-brown" href="orders.html">Open Orders</a>
+        </div>
+    </div>
+    <div class="row g-3" id="summary-cards"></div>
+    <div class="row g-4 mt-2">
+        <div class="col-lg-6">
+            <div class="card shadow h-100">
+                <div class="card-header">Top 5 Bestsellers</div>
+                <div class="card-body p-0">
+                    <table class="table mb-0" id="top-items"></table>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card shadow h-100">
+                <div class="card-header">Peak Hours (last 7 days)</div>
+                <div class="card-body" id="peak-hours"></div>
+            </div>
+        </div>
+    </div>
+    <div class="row g-4 mt-2">
+        <div class="col-lg-6">
+            <div class="card shadow h-100">
+                <div class="card-header">Sales by Category</div>
+                <div class="card-body" id="cat-sales"></div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card shadow h-100">
+                <div class="card-header">Payment Mix</div>
+                <div class="card-body" id="payment-mix"></div>
+            </div>
+        </div>
+    </div>
+</main>
+<footer class="text-center text-muted py-4 small">Crafted for a medieval café — <span id="year"></span></footer>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+document.getElementById('year').textContent = new Date().getFullYear();
+
+function renderNav(user) {
+    const nav = document.getElementById('nav-links');
+    const links = [
+        { href: 'dashboard.html', label: 'Dashboard' },
+        { href: 'orders.html', label: 'Orders' },
+    ];
+    if (['admin','manager'].includes(user.role)) {
+        links.push({ href: 'products.html', label: 'Products' });
+        links.push({ href: 'reports.html', label: 'Reports' });
+        links.push({ href: 'users.html', label: 'Users' });
+        links.push({ href: 'staff_activity.html', label: 'Staff' });
+    }
+    links.push({ href: 'settings.html', label: 'Settings' });
+    nav.innerHTML = links.map(l => `<li class="nav-item"><a class="nav-link" href="${l.href}">${l.label}</a></li>`).join('');
+    document.getElementById('nav-user').textContent = `Logged in as ${user.name} (${user.role})`;
+}
+
+async function load() {
+    const data = await getJSON('api/dashboard-data.php');
+    if (!data) return;
+    renderNav(data.user);
+    const fmt = (n) => '₱' + Number(n).toFixed(2);
+    document.getElementById('summary-cards').innerHTML = `
+        <div class="col-md-3"><div class="muted-box h-100"><div class="text-muted">Today</div><div class="fs-4 fw-bold">${fmt(data.todayTotal)}</div></div></div>
+        <div class="col-md-3"><div class="muted-box h-100"><div class="text-muted">Last 7 Days</div><div class="fs-4 fw-bold">${fmt(data.weekTotal)}</div></div></div>
+        <div class="col-md-3"><div class="muted-box h-100"><div class="text-muted">This Month</div><div class="fs-4 fw-bold">${fmt(data.monthTotal)}</div></div></div>
+        <div class="col-md-3"><div class="muted-box h-100"><div class="text-muted">Orders</div><div class="fs-4 fw-bold">${data.orderCount}</div><div class="small text-muted">Avg ${fmt(data.avgOrder)}</div></div></div>
+    `;
+    document.getElementById('top-items').innerHTML = `
+        <thead><tr><th>Item</th><th class="text-end">Qty</th></tr></thead>
+        <tbody>
+            ${data.topItems.length ? data.topItems.map(i => `<tr><td>${i.name}</td><td class="text-end">${i.qty}</td></tr>`).join('') : `<tr><td colspan="2" class="text-center p-4 text-muted">No sales yet.</td></tr>`}
+        </tbody>`;
+    const ph = data.hourly;
+    document.getElementById('peak-hours').innerHTML = ph.length ? ph.map(h => {
+        const max = Math.max(...ph.map(x => x.total));
+        const w = max > 0 ? Math.round((h.total / max) * 100) : 0;
+        return `<div class="mb-2"><div class="d-flex justify-content-between"><span>${String(h.hr).padStart(2,'0')}:00</span><span>${fmt(h.total)}</span></div><div class="progress" style="height:8px;"><div class="progress-bar bg-brown" style="width:${w}%"></div></div></div>`;
+    }).join('') : '<div class="text-muted">No sales yet.</div>';
+    const cs = data.catSales;
+    document.getElementById('cat-sales').innerHTML = cs.length ? (() => {
+        const max = Math.max(...cs.map(c => c.total));
+        return cs.map(c => {
+            const w = max > 0 ? Math.round((c.total / max) * 100) : 0;
+            return `<div class="mb-3"><div class="d-flex justify-content-between small"><span>${c.name}</span><span>${fmt(c.total)}</span></div><div class="progress" style="height:8px;"><div class="progress-bar bg-brown" style="width:${w}%"></div></div></div>`;
+        }).join('');
+    })() : '<div class="text-muted">No sales yet.</div>';
+    const pm = data.paymentMix;
+    document.getElementById('payment-mix').innerHTML = pm.length ? (() => {
+        const max = Math.max(...pm.map(p => p.total));
+        return pm.map(p => {
+            const w = max > 0 ? Math.round((p.total / max) * 100) : 0;
+            return `<div class="mb-3"><div class="d-flex justify-content-between small"><span>${p.payment_method.toUpperCase()}</span><span>${fmt(p.total)}</span></div><div class="progress" style="height:8px;"><div class="progress-bar bg-brown" style="width:${w}%"></div></div></div>`;
+        }).join('');
+    })() : '<div class="text-muted">No sales yet.</div>';
+}
+
+document.getElementById('logout-btn').addEventListener('click', async () => {
+    await getJSON('api/logout.php');
+});
+
+load();
+</script>
+</body>
+</html>
+
